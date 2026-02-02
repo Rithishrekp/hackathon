@@ -12,8 +12,15 @@ const Header = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
     const location = useLocation();
+    const user = JSON.parse(localStorage.getItem('user'));
 
     const isActive = (path) => location.pathname === path;
+
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    };
 
     const serviceCategories = [
         { name: 'All Services', path: '/services' },
@@ -75,26 +82,21 @@ const Header = () => {
                             How It Works
                         </Link>
 
-                        <Link
-                            to="/blog"
-                            className={`nav-link ${isActive('/blog') ? 'active' : ''}`}
-                        >
-                            Blog
-                        </Link>
-
-                        <Link
-                            to="/become-provider"
-                            className={`nav-link ${isActive('/become-provider') ? 'active' : ''}`}
-                        >
-                            Become a Provider
-                        </Link>
-
-                        <Link
-                            to="/contact"
-                            className={`nav-link ${isActive('/contact') ? 'active' : ''}`}
-                        >
-                            Contact
-                        </Link>
+                        {user ? (
+                            <Link
+                                to={user.role === 'provider' ? '/provider' : '/customer'}
+                                className={`nav-link ${location.pathname.includes('/customer') || location.pathname.includes('/provider') ? 'active' : ''}`}
+                            >
+                                My Dashboard
+                            </Link>
+                        ) : (
+                            <Link
+                                to="/become-provider"
+                                className={`nav-link ${isActive('/become-provider') ? 'active' : ''}`}
+                            >
+                                Become a Provider
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Actions */}
@@ -102,12 +104,22 @@ const Header = () => {
                         <button className="btn btn-icon btn-ghost" aria-label="Search">
                             <Search size={20} />
                         </button>
-                        <Link to="/login" className="btn btn-ghost">
-                            Login
-                        </Link>
-                        <Link to="/signup" className="btn btn-primary">
-                            Sign Up
-                        </Link>
+
+                        {user ? (
+                            <div className="user-profile-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--gray-700)' }}>{user.name}</span>
+                                <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ color: 'var(--primary-600)' }}>Logout</button>
+                            </div>
+                        ) : (
+                            <>
+                                <Link to="/login" className="btn btn-ghost">
+                                    Login
+                                </Link>
+                                <Link to="/signup" className="btn btn-primary">
+                                    Sign Up
+                                </Link>
+                            </>
+                        )}
 
                         {/* Mobile Menu Button */}
                         <button

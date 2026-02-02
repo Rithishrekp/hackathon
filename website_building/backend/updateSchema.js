@@ -56,6 +56,27 @@ const updateSchema = async () => {
             END $$;
         `);
 
+
+        // Add rating column to bookings if it doesn't exist
+        await pool.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='bookings' AND column_name='rating') THEN 
+                    ALTER TABLE bookings ADD COLUMN rating INTEGER; 
+                END IF;
+            END $$;
+        `);
+
+        // Add review column to bookings if it doesn't exist
+        await pool.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='bookings' AND column_name='review') THEN 
+                    ALTER TABLE bookings ADD COLUMN review TEXT; 
+                END IF;
+            END $$;
+        `);
+
         console.log("✅ Schema updated successfully!");
         process.exit(0);
     } catch (err) {

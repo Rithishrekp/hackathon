@@ -19,6 +19,13 @@ const BookService = () => {
             try {
                 const data = await getAllServices();
                 setServices(data);
+
+                // Check for category filter in URL
+                const params = new URLSearchParams(window.location.search);
+                const categoryFilter = params.get('cat');
+                if (categoryFilter) {
+                    setSearchQuery(categoryFilter);
+                }
             } catch (error) {
                 console.error('Failed to fetch services:', error);
                 setError('Failed to load services');

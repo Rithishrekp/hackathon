@@ -1,256 +1,266 @@
-import { Link, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { getServiceById } from '../../api';
 import {
-    Star,
-    Clock,
-    Shield,
-    CheckCircle,
-    MapPin,
-    Calendar,
-    User,
-    ChevronRight,
-    Heart,
-    Share2,
-    MessageCircle
+  Star,
+  Clock,
+  Shield,
+  CheckCircle,
+  MapPin,
+  Calendar,
+  User,
+  ChevronRight,
+  Heart,
+  Share2,
+  MessageCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 const ServiceDetails = () => {
-    const { serviceId } = useParams();
+  const { serviceId } = useParams();
+  const navigate = useNavigate();
+  const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    // Mock service data
-    const service = {
-        id: serviceId,
-        title: 'Professional Deep Home Cleaning',
-        category: 'Cleaning',
-        description: 'Our professional deep cleaning service covers every corner of your home. Our trained cleaners use eco-friendly products and advanced equipment to ensure your space is spotless and hygienic.',
-        price: 79,
-        duration: '3-4 hours',
-        rating: 4.9,
-        reviews: 2340,
-        images: [
-            'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1527515545081-5db817172677?w=800&h=500&fit=crop',
-        ],
-        features: [
-            'Full house deep cleaning',
-            'Kitchen & bathroom sanitization',
-            'Floor mopping & vacuuming',
-            'Dusting all surfaces',
-            'Window cleaning (interior)',
-            'Trash removal',
-        ],
-        includes: [
-            'All cleaning supplies included',
-            'Eco-friendly products',
-            'Trained & verified cleaners',
-            'Satisfaction guarantee',
-        ],
-        provider: {
-            name: 'CleanPro Services',
-            avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop',
-            rating: 4.9,
-            jobs: 1250,
-            verified: true,
-        }
+  useEffect(() => {
+    const fetchServiceData = async () => {
+      try {
+        setLoading(true);
+        const data = await getServiceById(serviceId);
+        setService(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching service:', err);
+        setError('Failed to load service details.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const relatedServices = [
-        { id: 2, title: 'Bathroom Deep Clean', price: 39, rating: 4.8, image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=300&h=200&fit=crop' },
-        { id: 3, title: 'Kitchen Cleaning', price: 49, rating: 4.9, image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop' },
-        { id: 4, title: 'Carpet Cleaning', price: 69, rating: 4.7, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop' },
-    ];
+    fetchServiceData();
+  }, [serviceId]);
 
-    const reviews = [
-        { id: 1, name: 'Sarah M.', rating: 5, date: '2 days ago', content: 'Absolutely amazing service! The team was professional and thorough.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&fit=crop' },
-        { id: 2, name: 'John D.', rating: 5, date: '1 week ago', content: 'Best cleaning service I\'ve ever used. Highly recommend!', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop' },
-        { id: 3, name: 'Emily R.', rating: 4, date: '2 weeks ago', content: 'Great job overall. Minor areas missed but they fixed it promptly.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop' },
-    ];
+  if (loading) return <div style={{ padding: '5rem', textAlign: 'center' }}>Loading service details...</div>;
+  if (error || !service) return (
+    <div style={{ padding: '5rem', textAlign: 'center' }}>
+      <h2>{error || 'Service not found'}</h2>
+      <button onClick={() => navigate('/services')} className="btn btn-primary" style={{ marginTop: '1rem' }}>
+        <ArrowLeft size={18} /> Back to Services
+      </button>
+    </div>
+  );
 
-    return (
-        <div className="service-details-page">
-            {/* Breadcrumb */}
-            <section className="breadcrumb-section">
-                <div className="container">
-                    <div className="breadcrumb">
-                        <Link to="/">Home</Link>
-                        <ChevronRight size={16} />
-                        <Link to="/services">Services</Link>
-                        <ChevronRight size={16} />
-                        <Link to={`/services/category/${service.category.toLowerCase()}`}>{service.category}</Link>
-                        <ChevronRight size={16} />
-                        <span>{service.title}</span>
-                    </div>
+  const relatedServices = [
+    { id: 2, title: 'Bathroom Deep Clean', price: 39, rating: 4.8, image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=300&h=200&fit=crop' },
+    { id: 3, title: 'Kitchen Cleaning', price: 49, rating: 4.9, image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop' },
+    { id: 4, title: 'Carpet Cleaning', price: 69, rating: 4.7, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop' },
+  ];
+
+  const reviews = [
+    { id: 1, name: 'Sarah M.', rating: 5, date: '2 days ago', content: 'Absolutely amazing service! The team was professional and thorough.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&fit=crop' },
+    { id: 2, name: 'John D.', rating: 5, date: '1 week ago', content: 'Best cleaning service I\'ve ever used. Highly recommend!', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop' },
+    { id: 3, name: 'Emily R.', rating: 4, date: '2 weeks ago', content: 'Great job overall. Minor areas missed but they fixed it promptly.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop' },
+  ];
+
+  return (
+    <div className="service-details-page">
+      {/* Breadcrumb */}
+      <section className="breadcrumb-section">
+        <div className="container">
+          <div className="breadcrumb">
+            <Link to="/">Home</Link>
+            <ChevronRight size={16} />
+            <Link to="/services">Services</Link>
+            <ChevronRight size={16} />
+            <Link to={`/services/category/${service.category?.toLowerCase() || 'general'}`}>{service.category || 'General'}</Link>
+            <ChevronRight size={16} />
+            <span>{service.title}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="service-details-layout">
+            {/* Main Content */}
+            <div className="service-main">
+              {/* Image Gallery */}
+              <div className="image-gallery">
+                <div className="main-image">
+                  <img src={service.image_url || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=500&fit=crop'} alt={service.title} />
                 </div>
-            </section>
+              </div>
 
-            <section className="section">
-                <div className="container">
-                    <div className="service-details-layout">
-                        {/* Main Content */}
-                        <div className="service-main">
-                            {/* Image Gallery */}
-                            <div className="image-gallery">
-                                <div className="main-image">
-                                    <img src={service.images[0]} alt={service.title} />
-                                </div>
-                                <div className="thumbnail-grid">
-                                    {service.images.slice(1).map((img, idx) => (
-                                        <img key={idx} src={img} alt={`${service.title} ${idx + 2}`} />
-                                    ))}
-                                </div>
+              {/* Service Info */}
+              <div className="service-info">
+                <div className="service-header">
+                  <span className="service-category">{service.category || 'General'}</span>
+                  <div className="service-actions">
+                    <button className="btn btn-ghost btn-icon"><Heart size={20} /></button>
+                    <button className="btn btn-ghost btn-icon"><Share2 size={20} /></button>
+                  </div>
+                </div>
+                <h1>{service.title}</h1>
+                <div className="service-meta">
+                  <div className="rating-display">
+                    <Star size={18} fill="#FBBF24" color="#FBBF24" />
+                    <span className="rating-value">{service.provider_rating || '4.8'}</span>
+                    <span className="rating-count">(Recently verified)</span>
+                  </div>
+                  <span className="meta-divider">•</span>
+                  <span className="meta-item"><Clock size={16} /> 2-3 hours</span>
+                </div>
+                <p className="service-description">{service.description}</p>
+
+                {/* Features */}
+                <div className="service-features">
+                  <h3>What's Included</h3>
+                  <ul className="features-list">
+                    <li><CheckCircle size={18} /> Professional Service</li>
+                    <li><CheckCircle size={18} /> All supplies included</li>
+                    <li><CheckCircle size={18} /> Satisfaction guarantee</li>
+                    <li><CheckCircle size={18} /> Background checked provider</li>
+                  </ul>
+                </div>
+
+                {/* Additional Benefits */}
+                <div className="service-benefits">
+                  <div className="benefit-item">
+                    <Shield size={20} />
+                    <span>Fully Insured</span>
+                  </div>
+                  <div className="benefit-item">
+                    <Shield size={20} />
+                    <span>Secure Payment</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reviews Section */}
+              <div className="reviews-section">
+                <div className="section-header">
+                  <h3>Customer Reviews</h3>
+                  <Link to="#" className="btn btn-secondary btn-sm">
+                    View All
+                  </Link>
+                </div>
+
+                <div className="reviews-list">
+                  {reviews.map(review => (
+                    <div key={review.id} className="review-card">
+                      <div className="review-header">
+                        <img src={review.avatar} alt={review.name} className="review-avatar" />
+                        <div>
+                          <h4>{review.name}</h4>
+                          <div className="review-meta">
+                            <div className="review-stars">
+                              {[...Array(review.rating)].map((_, i) => (
+                                <Star key={i} size={14} fill="#FBBF24" color="#FBBF24" />
+                              ))}
                             </div>
-
-                            {/* Service Info */}
-                            <div className="service-info">
-                                <div className="service-header">
-                                    <span className="service-category">{service.category}</span>
-                                    <div className="service-actions">
-                                        <button className="btn btn-ghost btn-icon"><Heart size={20} /></button>
-                                        <button className="btn btn-ghost btn-icon"><Share2 size={20} /></button>
-                                    </div>
-                                </div>
-                                <h1>{service.title}</h1>
-                                <div className="service-meta">
-                                    <div className="rating-display">
-                                        <Star size={18} fill="#FBBF24" color="#FBBF24" />
-                                        <span className="rating-value">{service.rating}</span>
-                                        <span className="rating-count">({service.reviews} reviews)</span>
-                                    </div>
-                                    <span className="meta-divider">•</span>
-                                    <span className="meta-item"><Clock size={16} /> {service.duration}</span>
-                                </div>
-                                <p className="service-description">{service.description}</p>
-
-                                {/* Features */}
-                                <div className="service-features">
-                                    <h3>What's Included</h3>
-                                    <ul className="features-list">
-                                        {service.features.map((feature, idx) => (
-                                            <li key={idx}><CheckCircle size={18} /> {feature}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* Additional Benefits */}
-                                <div className="service-benefits">
-                                    {service.includes.map((item, idx) => (
-                                        <div key={idx} className="benefit-item">
-                                            <Shield size={20} />
-                                            <span>{item}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Reviews Section */}
-                            <div className="reviews-section">
-                                <div className="section-header">
-                                    <h3>Customer Reviews</h3>
-                                    <Link to="#" className="btn btn-secondary btn-sm">
-                                        View All
-                                    </Link>
-                                </div>
-
-                                <div className="reviews-list">
-                                    {reviews.map(review => (
-                                        <div key={review.id} className="review-card">
-                                            <div className="review-header">
-                                                <img src={review.avatar} alt={review.name} className="review-avatar" />
-                                                <div>
-                                                    <h4>{review.name}</h4>
-                                                    <div className="review-meta">
-                                                        <div className="review-stars">
-                                                            {[...Array(review.rating)].map((_, i) => (
-                                                                <Star key={i} size={14} fill="#FBBF24" color="#FBBF24" />
-                                                            ))}
-                                                        </div>
-                                                        <span>{review.date}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p>{review.content}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <span>{review.date}</span>
+                          </div>
                         </div>
-
-                        {/* Sidebar */}
-                        <aside className="service-sidebar">
-                            {/* Booking Card */}
-                            <div className="card booking-card">
-                                <div className="price-display">
-                                    <span className="price-label">Starting from</span>
-                                    <span className="price-value">${service.price}</span>
-                                </div>
-
-                                <Link to="/customer/book-service" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                                    Book Now
-                                </Link>
-
-                                <div className="booking-features">
-                                    <div className="booking-feature">
-                                        <CheckCircle size={18} />
-                                        <span>Free cancellation</span>
-                                    </div>
-                                    <div className="booking-feature">
-                                        <Shield size={18} />
-                                        <span>Satisfaction guaranteed</span>
-                                    </div>
-                                    <div className="booking-feature">
-                                        <Clock size={18} />
-                                        <span>Same-day availability</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Provider Card */}
-                            <div className="card provider-card">
-                                <h4>Service Provider</h4>
-                                <div className="provider-info">
-                                    <img src={service.provider.avatar} alt={service.provider.name} className="provider-avatar" />
-                                    <div>
-                                        <h5>
-                                            {service.provider.name}
-                                            {service.provider.verified && (
-                                                <span className="verified-badge"><CheckCircle size={14} /></span>
-                                            )}
-                                        </h5>
-                                        <div className="provider-stats">
-                                            <Star size={14} fill="#FBBF24" color="#FBBF24" />
-                                            <span>{service.provider.rating}</span>
-                                            <span className="text-gray">• {service.provider.jobs} jobs</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button className="btn btn-secondary" style={{ width: '100%' }}>
-                                    <MessageCircle size={18} />
-                                    Contact Provider
-                                </button>
-                            </div>
-
-                            {/* Related Services */}
-                            <div className="related-services">
-                                <h4>Related Services</h4>
-                                {relatedServices.map(rs => (
-                                    <Link key={rs.id} to={`/services/${rs.id}`} className="related-service-card">
-                                        <img src={rs.image} alt={rs.title} />
-                                        <div>
-                                            <h5>{rs.title}</h5>
-                                            <div className="related-meta">
-                                                <span className="price">${rs.price}</span>
-                                                <span className="rating"><Star size={12} fill="#FBBF24" color="#FBBF24" /> {rs.rating}</span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </aside>
+                      </div>
+                      <p>{review.content}</p>
                     </div>
+                  ))}
                 </div>
-            </section>
+              </div>
+            </div>
 
-            <style>{`
+            {/* Sidebar */}
+            <aside className="service-sidebar">
+              {/* Booking Card */}
+              <div className="card booking-card">
+                <div className="price-display">
+                  <span className="price-label">Starting from</span>
+                  <span className="price-value">₹{service.price}</span>
+                </div>
+
+                <Link
+                  to={`/customer/book-service?serviceId=${service.id}&price=${service.price}&providerId=${service.provider_id}`}
+                  className="btn btn-primary btn-lg"
+                  style={{ width: '100%', textAlign: 'center' }}
+                >
+                  Book Now
+                </Link>
+
+                <div className="booking-features">
+                  <div className="booking-feature">
+                    <CheckCircle size={18} />
+                    <span>Free cancellation</span>
+                  </div>
+                  <div className="booking-feature">
+                    <Shield size={18} />
+                    <span>Satisfaction guaranteed</span>
+                  </div>
+                  <div className="booking-feature">
+                    <Clock size={18} />
+                    <span>Same-day availability</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Provider Card */}
+              <div className="card provider-card">
+                <h4>Service Provider</h4>
+                <div className="provider-info">
+                  <div className="provider-avatar-placeholder" style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '12px',
+                    background: 'var(--primary-100)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--primary-600)',
+                    fontWeight: 'bold',
+                    fontSize: '1.2rem'
+                  }}>
+                    {service.provider_name?.charAt(0) || 'P'}
+                  </div>
+                  <div>
+                    <h5>
+                      {service.provider_name}
+                      <span className="verified-badge"><CheckCircle size={14} /></span>
+                    </h5>
+                    <div className="provider-stats">
+                      <Star size={14} fill="#FBBF24" color="#FBBF24" />
+                      <span>{service.provider_rating || '4.8'}</span>
+                      <span className="text-gray">• Verified Provider</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="btn btn-secondary" style={{ width: '100%' }}>
+                  <MessageCircle size={18} />
+                  Contact Provider
+                </button>
+              </div>
+
+              {/* Related Services */}
+              <div className="related-services">
+                <h4>Related Services</h4>
+                {relatedServices.map(rs => (
+                  <Link key={rs.id} to={`/services/${rs.id}`} className="related-service-card">
+                    <img src={rs.image} alt={rs.title} />
+                    <div>
+                      <h5>{rs.title}</h5>
+                      <div className="related-meta">
+                        <span className="price">${rs.price}</span>
+                        <span className="rating"><Star size={12} fill="#FBBF24" color="#FBBF24" /> {rs.rating}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <style>{`
         .breadcrumb-section {
           background: var(--gray-50);
           padding: var(--space-4) 0;
@@ -650,8 +660,8 @@ const ServiceDetails = () => {
           }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default ServiceDetails;

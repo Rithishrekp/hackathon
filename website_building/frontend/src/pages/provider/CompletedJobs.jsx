@@ -1,45 +1,84 @@
 import { Link } from 'react-router-dom';
 import { Calendar, Star, DollarSign, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getBookings } from '../../api';
 
 const CompletedJobs = () => {
-    const jobs = [
-        { id: 1, service: 'Home Cleaning', customer: 'Sarah M.', date: 'Jan 25, 2026', amount: 79, rating: 5 },
-        { id: 2, service: 'Deep Cleaning', customer: 'Mike R.', date: 'Jan 22, 2026', amount: 99, rating: 5 },
-        { id: 3, service: 'Office Cleaning', customer: 'Tech Co', date: 'Jan 20, 2026', amount: 149, rating: 4 },
-        { id: 4, service: 'Home Cleaning', customer: 'Emily T.', date: 'Jan 18, 2026', amount: 79, rating: 5 },
-        { id: 5, service: 'Move-out Cleaning', customer: 'John D.', date: 'Jan 15, 2026', amount: 129, rating: null },
-    ];
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
-    const totalEarnings = jobs.reduce((sum, j) => sum + j.amount, 0);
+    useEffect(() => {
+        const fetchJobs = async () => {
+            if (user.id) {
+                try {
+                    const token = localStorage.getItem('token');
+                    const bookings = await getBookings(user.id, 'provider', token || user.token);
+
+                    const completed = bookings
+                        .filter(b => b.status === 'completed')
+                        .map(b => ({
+                            id: b.id,
+                            service: b.service_name,
+                            customer: b.customer_name || 'Customer',
+                            date: new Date(b.booking_date).toLocaleDateString(),
+                            amount: b.price || 0,
+                            rating: b.rating
+                        }));
+                    setJobs(completed);
+                } catch (err) {
+                    console.error("Failed to fetch jobs", err);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        };
+        fetchJobs();
+    }, [user.id]);
+
+    const totalEarnings = jobs.reduce((sum, j) => sum + Number(j.amount), 0);
+
+    if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading history...</div>;
 
     return (
         <div className="completed-jobs-page">
             <div className="page-header">
                 <div><h1>Completed Jobs</h1><p>Your job history</p></div>
-                <div className="header-stats"><DollarSign size={20} /> Total: <strong>${totalEarnings}</strong></div>
+                <div className="header-stats"><strong>Total Earnings: ₹{totalEarnings}</strong></div>
             </div>
 
             <div className="jobs-list">
-                {jobs.map(job => (
-                    <Link key={job.id} to={`/provider/jobs/${job.id}`} className="card job-card">
-                        <div className="job-info">
-                            <h4>{job.service}</h4>
-                            <p>{job.customer}</p>
-                            <span className="job-date"><Calendar size={14} /> {job.date}</span>
-                        </div>
-                        <div className="job-stats">
-                            {job.rating ? (
-                                <div className="rating"><Star size={16} fill="#FBBF24" color="#FBBF24" /> {job.rating}.0</div>
-                            ) : (
-                                <span className="badge badge-gray">Not rated</span>
-                            )}
-                            <span className="amount">${job.amount}</span>
-                        </div>
-                    </Link>
-                ))}
+                {jobs.length === 0 ? (
+                    <div className="empty-state" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--gray-500)' }}>
+                        <p>No completed jobs yet.</p>
+                    </div>
+                ) : (
+                    jobs.map(job => (
+                        <Link key={job.id} to={`/provider/jobs/${job.id}`} className="card job-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <div className="job-info">
+                                <h4>{job.service}</h4>
+                                <p>{job.customer}</p>
+                                <span className="job-date"><Calendar size={14} /> {job.date}</span>
+                            </div>
+                            <div className="job-stats">
+                                {job.rating ? (
+                                    <div className="rating">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} size={14} fill={i < job.rating ? '#FBBF24' : 'none'} color="#FBBF24" />
+                                        ))}
+                                        <span>{job.rating}.0</span>
+                                    </div>
+                                ) : (
+                                    <span className="badge badge-gray">Not rated yet</span>
+                                )}
+                                <span className="amount">₹{job.amount}</span>
+                            </div>
+                        </Link>
+                    ))
+                )}
             </div>
-
             <style>{`
         .completed-jobs-page { max-width: 900px; margin: 0 auto; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
@@ -53,9 +92,10 @@ const CompletedJobs = () => {
         .job-info h4 { margin-bottom: var(--space-1); }
         .job-info p { font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-1); }
         .job-date { font-size: var(--text-sm); color: var(--gray-400); display: flex; align-items: center; gap: var(--space-1); }
-        .job-stats { text-align: right; }
-        .rating { display: flex; align-items: center; gap: var(--space-1); font-weight: var(--font-semibold); margin-bottom: var(--space-1); }
+        .job-stats { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+        .rating { display: flex; align-items: center; gap: var(--space-1); font-weight: var(--font-semibold); color: var(--accent-yellow); font-size: 14px; }
         .amount { font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--primary-600); }
+        .badge-gray { background: #f3f4f6; color: #6b7280; font-size: 12px; padding: 2px 8px; border-radius: 99px; }
         @media (max-width: 768px) { .page-header { flex-direction: column; gap: var(--space-4); align-items: flex-start; } }
       `}</style>
         </div>

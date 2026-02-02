@@ -35,7 +35,7 @@ This document walks you through testing the complete flow where:
    ```
 4. Click **"Create Service"**
 5. ✅ You should see:
-   - Success alert: "Service created successfully!"
+   - Success alert: "Service created successfully!"s c
    - The service appears in your services list
    - Service card shows: title, category badge, description, price, and image
 

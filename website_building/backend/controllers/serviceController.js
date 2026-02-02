@@ -32,11 +32,43 @@ export const createService = async (req, res) => {
     }
 };
 
+export const getCategorizedServices = async (req, res) => {
+    try {
+        const query = `
+            SELECT s.*, u.name as provider_name, u.is_available 
+            FROM services s 
+            JOIN users u ON s.provider_id = u.id 
+            WHERE u.is_available = true
+        `;
+        const result = await pool.query(query);
+        const services = result.rows;
+
+        const categorized = services.reduce((acc, service) => {
+            const cat = service.category || 'Other';
+            if (!acc[cat]) acc[cat] = [];
+            acc[cat].push(service);
+            return acc;
+        }, {});
+
+        res.json(categorized);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch categorized services' });
+    }
+};
+
 export const getServiceById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const service = await pool.query('SELECT * FROM services WHERE id = $1', [id]);
+        const query = `
+            SELECT s.*, u.name as provider_name, u.is_available as provider_available,
+            (SELECT AVG(rating)::numeric(10,1) FROM bookings b JOIN services s2 ON b.service_id = s2.id WHERE s2.provider_id = u.id AND b.rating IS NOT NULL) as provider_rating
+            FROM services s
+            JOIN users u ON s.provider_id = u.id
+            WHERE s.id = $1::integer
+        `;
+        const service = await pool.query(query, [id]);
         if (service.rows.length === 0) {
             return res.status(404).json({ message: 'Service not found' });
         }

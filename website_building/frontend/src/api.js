@@ -75,6 +75,18 @@ export const getAllServices = async () => {
     }
 };
 
+// Get categorized services
+export const getCategorizedServices = async () => {
+    try {
+        const response = await fetch(`${API_URL}/services/categorized`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to fetch categorized services');
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 // Get service by ID
 export const getServiceById = async (serviceId) => {
     try {
@@ -157,6 +169,61 @@ export const completeOnboarding = async (userId, phone, address, token) => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to complete onboarding');
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Get booking by ID
+export const getBookingById = async (bookingId, token) => {
+    try {
+        const response = await fetch(`${API_URL}/bookings/detail/${bookingId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to fetch booking details');
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+// Update booking status
+export const updateBookingStatus = async (bookingId, status, token) => {
+    try {
+        const response = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to update booking status');
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Rate booking
+export const rateBooking = async (bookingId, rating, review, token) => {
+    try {
+        const response = await fetch(`${API_URL}/bookings/${bookingId}/rate`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ rating, review })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to submit rating');
         return data;
     } catch (error) {
         throw error;

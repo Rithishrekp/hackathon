@@ -1,12 +1,56 @@
+import { useState, useEffect } from 'react';
 import { Star, Calendar, MessageCircle } from 'lucide-react';
+import { getBookings } from '../../api';
 
 const Reviews = () => {
-    const stats = { average: 4.9, total: 45, breakdown: [{ stars: 5, count: 38 }, { stars: 4, count: 5 }, { stars: 3, count: 2 }, { stars: 2, count: 0 }, { stars: 1, count: 0 }] };
-    const reviews = [
-        { id: 1, customer: 'Jane D.', rating: 5, date: 'Jan 26, 2026', comment: 'Excellent service! Very thorough and professional.', service: 'Home Cleaning', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&fit=crop' },
-        { id: 2, customer: 'Mike R.', rating: 5, date: 'Jan 22, 2026', comment: 'Great work, arrived on time and did an amazing job!', service: 'Deep Cleaning', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop' },
-        { id: 3, customer: 'Emily T.', rating: 4, date: 'Jan 18, 2026', comment: 'Good overall, just a few spots missed in the corner.', service: 'Home Cleaning', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop' },
-    ];
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ average: 0, total: 0, breakdown: [] });
+    const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
+
+    useEffect(() => {
+        const fetchReviews = async () => {
+            if (!user.id) return;
+            try {
+                const token = localStorage.getItem('token');
+                const bookings = await getBookings(user.id, 'provider', token);
+
+                // Filter only bookings with ratings
+                const ratedBookings = bookings.filter(b => b.rating).map(b => ({
+                    id: b.id,
+                    customer: b.customer_name || 'Anonymous',
+                    rating: b.rating,
+                    date: new Date(b.booking_date).toLocaleDateString(),
+                    comment: b.review || 'No comment provided',
+                    service: b.service_name,
+                    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&fit=crop'
+                }));
+
+                setReviews(ratedBookings);
+
+                // Calculate stats
+                if (ratedBookings.length > 0) {
+                    const total = ratedBookings.length;
+                    const sum = ratedBookings.reduce((acc, curr) => acc + curr.rating, 0);
+                    const average = (sum / total).toFixed(1);
+
+                    const breakdown = [5, 4, 3, 2, 1].map(star => ({
+                        stars: star,
+                        count: ratedBookings.filter(b => b.rating === star).length
+                    }));
+
+                    setStats({ average, total, breakdown });
+                }
+            } catch (err) {
+                console.error("Failed to fetch reviews", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReviews();
+    }, [user.id]);
+
+    if (loading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Loading reviews...</div>;
 
     return (
         <div className="reviews-page">
@@ -29,23 +73,32 @@ const Reviews = () => {
                     </div>
                 </div>
                 <div className="reviews-list">
-                    {reviews.map(r => (
-                        <div key={r.id} className="card review-card">
-                            <div className="review-header">
-                                <img src={r.avatar} alt={r.customer} />
-                                <div>
-                                    <h4>{r.customer}</h4>
-                                    <span className="service">{r.service}</span>
-                                </div>
-                                <div className="review-meta">
-                                    <div className="stars">{[...Array(r.rating)].map((_, i) => <Star key={i} size={14} fill="#FBBF24" color="#FBBF24" />)}</div>
-                                    <span><Calendar size={12} /> {r.date}</span>
-                                </div>
-                            </div>
-                            <p>{r.comment}</p>
-                            <button className="btn btn-ghost btn-sm"><MessageCircle size={14} /> Reply</button>
+                    {reviews.length === 0 ? (
+                        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+                            <p>No reviews yet. Complete jobs and provide great service to earn ratings!</p>
                         </div>
-                    ))}
+                    ) : (
+                        reviews.map(r => (
+                            <div key={r.id} className="card review-card">
+                                <div className="review-header">
+                                    <img src={r.avatar} alt={r.customer} />
+                                    <div>
+                                        <h4>{r.customer}</h4>
+                                        <span className="service">{r.service}</span>
+                                    </div>
+                                    <div className="review-meta">
+                                        <div className="stars">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} size={14} fill={i < r.rating ? "#FBBF24" : "none"} color="#FBBF24" />
+                                            ))}
+                                        </div>
+                                        <span><Calendar size={12} /> {r.date}</span>
+                                    </div>
+                                </div>
+                                <p>{r.comment}</p>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
             <style>{`
